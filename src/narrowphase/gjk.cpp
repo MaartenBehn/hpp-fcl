@@ -623,10 +623,15 @@ bool GJK::getClosestPoints(const MinkowskiDiff& shape, Vec3f& w0, Vec3f& w1) {
 
 GJK::Status GJK::evaluate(const MinkowskiDiff& shape_, const Vec3f& guess,
                           const support_func_guess_t& supportHint) {
+
+  std::cout << "----- Starting GJK ------- \n\n";
   FCL_REAL alpha = 0;
   iterations = 0;
   const FCL_REAL inflation = shape_.inflation.sum();
+  std::cout << "inflation: \n" << inflation << "\n";
+
   const FCL_REAL upper_bound = distance_upper_bound + inflation;
+  std::cout << "upper_bound: \n" << inflation << "\n";
 
   free_v[0] = &store_v[0];
   free_v[1] = &store_v[1];
@@ -641,6 +646,8 @@ GJK::Status GJK::evaluate(const MinkowskiDiff& shape_, const Vec3f& guess,
   simplices[0].rank = 0;
   support_hint = supportHint;
 
+  std::cout << "support_hint: \n" << support_hint << "\n";
+
   FCL_REAL rl = guess.norm();
   if (rl < tolerance) {
     ray = Vec3f(-1, 0, 0);
@@ -648,15 +655,29 @@ GJK::Status GJK::evaluate(const MinkowskiDiff& shape_, const Vec3f& guess,
   } else
     ray = guess;
 
+  std::cout << "ray: \n" << ray << "\n";
+  std::cout << "rl: \n" << rl << "\n";
+
   // Momentum
   GJKVariant current_gjk_variant = gjk_variant;
+  std::cout << "gjk_variant: \n" << gjk_variant << "\n";
+
   Vec3f w = ray;
+  std::cout << "w: \n" << w << "\n";
+
   Vec3f dir = ray;
+  std::cout << "dir: \n" << dir << "\n";
+
   Vec3f y;
   FCL_REAL momentum;
   bool normalize_support_direction = shape->normalize_support_direction;
+  std::cout << "normalize_support_direction: \n" << normalize_support_direction << "\n";
+
+  std::cout << "--- loop ---\n";
   do {
+    std::cout << "-- iteration: " << iterations << " --\n";
     vertex_id_t next = (vertex_id_t)(1 - current);
+
     Simplex& curr_simplex = simplices[current];
     Simplex& next_simplex = simplices[next];
 
@@ -668,19 +689,26 @@ GJK::Status GJK::evaluate(const MinkowskiDiff& shape_, const Vec3f& guess,
     if (rl < tolerance)  // mean origin is near the face of original simplex,
                          // return touch
     {
+      std::cout << "rl < tolerance: true \n";
+
       assert(rl > 0);
       status = Inside;
+      std::cout << "status: \n" << status << "\n";
       distance = -inflation;  // should we take rl into account ?
+      std::cout << "distance: \n" << distance << "\n";
       break;
     }
 
     // Compute direction for support call
     switch (current_gjk_variant) {
       case DefaultGJK:
+        std::cout << "DefaultGJK \n";
         dir = ray;
+        std::cout << "dir: \n" << dir << "\n";
         break;
 
       case NesterovAcceleration:
+        std::cout << "NesterovAcceleration \n";
         // Normalize heuristic for collision pairs involving convex but not
         // strictly-convex shapes This corresponds to most use cases.
         if (normalize_support_direction) {
@@ -698,6 +726,7 @@ GJK::Status GJK::evaluate(const MinkowskiDiff& shape_, const Vec3f& guess,
           y = momentum * ray + (1 - momentum) * w;
           dir = momentum * dir + (1 - momentum) * y;
         }
+        std::cout << "dir: \n" << dir << "\n";
         break;
 
       default:
@@ -710,19 +739,26 @@ GJK::Status GJK::evaluate(const MinkowskiDiff& shape_, const Vec3f& guess,
     // check removed (by ?): when the new support point is close to previous
     // support points, stop (as the new simplex is degenerated)
     w = curr_simplex.vertex[curr_simplex.rank - 1]->w;
+    std::cout << "w: \n" << w << "\n";
 
     // check B: no collision if omega > 0
     FCL_REAL omega = dir.dot(w) / dir.norm();
+    std::cout << "omega: \n" << omega << "\n";
     if (omega > upper_bound) {
+      std::cout << "omega > upper_bound: true\n";
       distance = omega - inflation;
+      std::cout << "distance:\n" << distance << "\n";
       status = EarlyStopped;
+      std::cout << "status:\n" << status << "\n";
       break;
     }
 
     // Check to remove acceleration
     if (current_gjk_variant != DefaultGJK) {
       FCL_REAL frank_wolfe_duality_gap = 2 * ray.dot(ray - w);
+      std::cout << "frank_wolfe_duality_gap:\n" << frank_wolfe_duality_gap << "\n";
       if (frank_wolfe_duality_gap - tolerance <= 0) {
+        std::cout << "frank_wolfe_duality_gap - tolerance <= 0: true\n";
         removeVertex(simplices[current]);
         current_gjk_variant = DefaultGJK;  // move back to classic GJK
         continue;                          // continue to next iteration
@@ -732,20 +768,25 @@ GJK::Status GJK::evaluate(const MinkowskiDiff& shape_, const Vec3f& guess,
     // check C: when the new support point is close to the sub-simplex where the
     // ray point lies, stop (as the new simplex again is degenerated)
     bool cv_check_passed = checkConvergence(w, rl, alpha, omega);
+    std::cout << "cv_check_passed:\n" << cv_check_passed << "\n";
     // TODO here, we can stop at iteration 0 if this condition is met.
     // We stopping at iteration 0, the closest point will not be valid.
     // if(diff - tolerance * rl <= 0)
     if (iterations > 0 && cv_check_passed) {
+      std::cout << "iterations > 0 && cv_check_passed: true \n";
       if (iterations > 0) removeVertex(simplices[current]);
       if (current_gjk_variant != DefaultGJK) {
+        std::cout << "current_gjk_variant != DefaultGJK: true \n";
         current_gjk_variant = DefaultGJK;  // move back to classic GJK
         continue;
       }
       distance = rl - inflation;
+      std::cout << "distance:\n" << distance << "\n";
       // TODO When inflation is strictly positive, the distance may be exactly
       // zero (so the ray is not zero) and we are not in the case rl <
       // tolerance.
       if (distance < tolerance) status = Inside;
+      std::cout << "status:\n" << status << "\n";
       break;
     }
 
@@ -754,6 +795,7 @@ GJK::Status GJK::evaluate(const MinkowskiDiff& shape_, const Vec3f& guess,
     bool inside;
     switch (curr_simplex.rank) {
       case 1:  // Only at the first iteration
+        std::cout << "case: 1\n";
         assert(iterations == 0);
         ray = w;
         inside = false;
@@ -761,27 +803,37 @@ GJK::Status GJK::evaluate(const MinkowskiDiff& shape_, const Vec3f& guess,
         next_simplex.vertex[0] = curr_simplex.vertex[0];
         break;
       case 2:
+        std::cout << "case: 2\n";
         inside = projectLineOrigin(curr_simplex, next_simplex);
         break;
       case 3:
+        std::cout << "case: 3\n";
         inside = projectTriangleOrigin(curr_simplex, next_simplex);
         break;
       case 4:
+        std::cout << "case: 4\n";
         inside = projectTetrahedraOrigin(curr_simplex, next_simplex);
         break;
       default:
         throw std::logic_error("Invalid simplex rank");
     }
+    std::cout << "inside:\n" << inside << "\n";
+    std::cout << "ray:\n" << ray << "\n";
+    
+
     assert(nfree + next_simplex.rank == 4);
     current = next;
     if (!inside) rl = ray.norm();
+    std::cout << "rl:\n" << rl << "\n";
     if (inside || rl == 0) {
+      std::cout << "inside || rl == 0: true \n";
       status = Inside;
       distance = -inflation - 1.;
       break;
     }
 
     status = ((++iterations) < max_iterations) ? status : Failed;
+    std::cout << "status:\n" << status << "\n";
 
   } while (status == Valid);
 
