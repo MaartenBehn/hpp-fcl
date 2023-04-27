@@ -630,6 +630,7 @@ GJK::Status GJK::evaluate(const MinkowskiDiff& shape_, const Vec3f& guess,
                           const support_func_guess_t& supportHint) {
 
   std::cout << "----- Starting GJK ------- \n\n";
+  std::cout << "test";
   FCL_REAL alpha = 0;
   iterations = 0;
   const FCL_REAL inflation = shape_.inflation.sum();
