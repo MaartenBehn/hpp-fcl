@@ -96,6 +96,8 @@ inline void getShapeSupport(const Capsule* capsule, const Vec3f& dir,
     support[2] = capsule->halfLength;
   else
     support[2] = -capsule->halfLength;
+
+    std::cout << "support: \n" << support << "\n";
 }
 
 void getShapeSupport(const Cone* cone, const Vec3f& dir, Vec3f& support, int&,
@@ -291,6 +293,9 @@ Vec3f getSupport(const ShapeBase* shape, const Vec3f& dir, bool dirIsNormalized,
       support.setZero();
       ;  // nothing
   }
+
+
+  std::cout << "support: \n" << support << "\n";
 
   return support;
 }

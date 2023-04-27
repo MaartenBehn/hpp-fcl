@@ -38,6 +38,7 @@
 #ifndef HPP_FCL_GJK_H
 #define HPP_FCL_GJK_H
 
+#include <iostream>
 #include <vector>
 
 #include <hpp/fcl/shape/geometric_shapes.h>
@@ -211,6 +212,9 @@ struct HPP_FCL_DLLAPI GJK {
                          support_func_guess_t& hint) const {
     shape->support(d, dIsNormalized, sv.w0, sv.w1, hint);
     sv.w = sv.w0 - sv.w1;
+
+    std::cout << "s0: \n" << sv.w0 << "\n";
+    std::cout << "s1: \n" << sv.w1 << "\n";
   }
 
   /// @brief whether the simplex enclose the origin
