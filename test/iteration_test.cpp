@@ -47,6 +47,7 @@
 using hpp::fcl::Box;
 using hpp::fcl::Capsule;
 using hpp::fcl::Sphere;
+using hpp::fcl::Cylinder;
 using hpp::fcl::constructPolytopeFromEllipsoid;
 using hpp::fcl::Convex;
 using hpp::fcl::Ellipsoid;
@@ -127,78 +128,50 @@ BOOST_AUTO_TEST_CASE(case_3) {
 }
 
 
-BOOST_AUTO_TEST_CASE(sphere) {
+BOOST_AUTO_TEST_CASE(sphere0) {
   Sphere sphere0 = Sphere(1.0);
 
-  test_nesterov_gjk(sphere0, sphere0);
+  Transform3f transform; 
+  Eigen::Matrix3d m;
+  m << 1.0, 0.0, 0.0,
+       0.0, 1.0, 0.0,
+       0.0, 0.0, 1.0;
+  transform.setTransform(m, Vec3f(0.0, 0.0, 0.0));
+
+  test_nesterov_gjk(sphere0, sphere0, transform, transform);
 }
 
 
-/*
-{
-    "case": 3,
-    "collider1": {
-        "typ": "Capsule",
-        "collider2origin": [
-            [
-                -0.758961,
-                0.639032,
-                0.124964,
-                0.068672
-            ],
-            [
-                -0.237632,
-                -0.450513,
-                0.860563,
-                0.111004
-            ],
-            [
-                0.606226,
-                0.623438,
-                0.493776,
-                1.103138
-            ],
-            [
-                0.0,
-                0.0,
-                0.0,
-                1.0
-            ]
-        ],
-        "radius": 0.357657,
-        "height": 0.472496
-    },
-    "collider2": {
-        "typ": "Capsule",
-        "collider2origin": [
-            [
-                0.362513,
-                0.093807,
-                -0.927246,
-                -0.868677
-            ],
-            [
-                -0.664387,
-                0.723738,
-                -0.186528,
-                -1.524819
-            ],
-            [
-                0.653585,
-                0.683669,
-                0.324689,
-                -0.989982
-            ],
-            [
-                0.0,
-                0.0,
-                0.0,
-                1.0
-            ]
-        ],
-        "radius": 0.717198,
-        "height": 0.047953
-    },
-    "distance": 1.5253071099939222
-},
-*/
+BOOST_AUTO_TEST_CASE(sphere1) {
+  Sphere sphere0 = Sphere(1.0);
+
+  Transform3f transform0; 
+  Transform3f transform1; 
+  Eigen::Matrix3d m;
+  m << 1.0, 0.0, 0.0,
+       0.0, 1.0, 0.0,
+       0.0, 0.0, 1.0;
+  transform0.setTransform(m, Vec3f(0.0, 0.0, 0.0));
+  transform1.setTransform(m, Vec3f(1.0, 1.0, 1.0));
+
+  test_nesterov_gjk(sphere0, sphere0, transform0, transform1);
+}
+
+
+
+BOOST_AUTO_TEST_CASE(cylinder0) {
+  Cylinder cylinder0 = Cylinder(1.0, 1.0);
+
+  Transform3f transform0; 
+  Transform3f transform1; 
+  Eigen::Matrix3d m;
+  m << 1.0, 0.0, 0.0,
+       0.0, 1.0, 0.0,
+       0.0, 0.0, 1.0;
+  transform0.setTransform(m, Vec3f(0.0, 0.0, 0.0));
+  transform1.setTransform(m, Vec3f(3.0, 0.0, 0.0));
+
+  test_nesterov_gjk(cylinder0, cylinder0, transform0, transform0);
+}
+
+

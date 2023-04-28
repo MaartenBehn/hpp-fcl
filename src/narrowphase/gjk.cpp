@@ -147,7 +147,12 @@ void getShapeSupport(const Cylinder* cylinder, const Vec3f& dir, Vec3f& support,
   FCL_REAL half_h = cylinder->halfLength;
   FCL_REAL r = cylinder->radius;
 
+  std::cout << "half_h: \n" << half_h << "\n";
+  std::cout << "r: \n" << r << "\n";
+
   if (dir.head<2>() == Eigen::Matrix<FCL_REAL, 2, 1>::Zero()) half_h *= inflate;
+
+  std::cout << "half_h: \n" << half_h << "\n";
 
   if (dir[2] > 0)
     support[2] = half_h;
@@ -157,10 +162,19 @@ void getShapeSupport(const Cylinder* cylinder, const Vec3f& dir, Vec3f& support,
     support[2] = 0;
     r *= inflate;
   }
+
+  std::cout << "support: \n" << support << "\n";
+  std::cout << "r: \n" << r << "\n";
+
+
   if (dir.head<2>() == Eigen::Matrix<FCL_REAL, 2, 1>::Zero())
     support.head<2>().setZero();
   else
     support.head<2>() = dir.head<2>().normalized() * r;
+
+
+  std::cout << "support: \n" << support << "\n";
+
   assert(fabs(support[0] * dir[1] - support[1] * dir[0]) <
          sqrt(std::numeric_limits<FCL_REAL>::epsilon()));
 }
@@ -510,8 +524,7 @@ void MinkowskiDiff::set(const ShapeBase* shape0, const ShapeBase* shape1,
 void MinkowskiDiff::set(const ShapeBase* shape0, const ShapeBase* shape1) {
   shapes[0] = shape0;
   shapes[1] = shape1;
-  getNormalizeSupportDirectionFromShapes(shape0, shape1,
-                                 evaluate        normalize_support_direction);
+  getNormalizeSupportDirectionFromShapes(shape0, shape1, normalize_support_direction);
 
   oR1.setIdentity();
   ot1.setZero();
