@@ -511,7 +511,7 @@ void MinkowskiDiff::set(const ShapeBase* shape0, const ShapeBase* shape1) {
   shapes[0] = shape0;
   shapes[1] = shape1;
   getNormalizeSupportDirectionFromShapes(shape0, shape1,
-                                         normalize_support_direction);
+                                 evaluate        normalize_support_direction);
 
   oR1.setIdentity();
   ot1.setZero();
@@ -630,14 +630,16 @@ GJK::Status GJK::evaluate(const MinkowskiDiff& shape_, const Vec3f& guess,
                           const support_func_guess_t& supportHint) {
 
   std::cout << "----- Starting GJK ------- \n\n";
-  std::cout << "test";
   FCL_REAL alpha = 0;
   iterations = 0;
   const FCL_REAL inflation = shape_.inflation.sum();
-  std::cout << "inflation: \n" << inflation << "\n";
 
   const FCL_REAL upper_bound = distance_upper_bound + inflation;
-  std::cout << "upper_bound: \n" << inflation << "\n";
+  std::cout << "inflation: \n" << inflation << "\n";
+  std::cout << "distance_upper_bound: \n" << distance_upper_bound << "\n";
+  std::cout << "upper_bound: \n" << upper_bound << "\n";
+  std::cout << "tolerance: \n" << tolerance << "\n";
+
 
   free_v[0] = &store_v[0];
   free_v[1] = &store_v[1];
