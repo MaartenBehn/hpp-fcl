@@ -46,6 +46,7 @@
 
 using hpp::fcl::Box;
 using hpp::fcl::Capsule;
+using hpp::fcl::Sphere;
 using hpp::fcl::constructPolytopeFromEllipsoid;
 using hpp::fcl::Convex;
 using hpp::fcl::Ellipsoid;
@@ -124,6 +125,14 @@ BOOST_AUTO_TEST_CASE(case_3) {
 
   test_nesterov_gjk(capsule0, capsule1, transform0, transform1);
 }
+
+
+BOOST_AUTO_TEST_CASE(sphere) {
+  Sphere sphere0 = Sphere(1.0);
+
+  test_nesterov_gjk(sphere0, sphere0);
+}
+
 
 /*
 {
