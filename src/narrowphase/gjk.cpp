@@ -78,13 +78,17 @@ inline void getShapeSupport(const Sphere*, const Vec3f& /*dir*/, Vec3f& support,
 
 inline void getShapeSupport(const Ellipsoid* ellipsoid, const Vec3f& dir,
                             Vec3f& support, int&, MinkowskiDiff::ShapeData*) {
+
+  std::cout << "ellip_dir: \n" << dir << "\n";
   FCL_REAL a2 = ellipsoid->radii[0] * ellipsoid->radii[0];
   FCL_REAL b2 = ellipsoid->radii[1] * ellipsoid->radii[1];
   FCL_REAL c2 = ellipsoid->radii[2] * ellipsoid->radii[2];
 
   Vec3f v(a2 * dir[0], b2 * dir[1], c2 * dir[2]);
+  std::cout << "ellip_v: \n" << v << "\n";
 
   FCL_REAL d = std::sqrt(v.dot(dir));
+  std::cout << "ellip_d: \n" << d << "\n";
 
   support = v / d;
 }
@@ -321,6 +325,10 @@ void getSupportTpl(const Shape0* s0, const Shape1* s1, const Matrix3f& oR1,
                    const Vec3f& ot1, const Vec3f& dir, Vec3f& support0,
                    Vec3f& support1, support_func_guess_t& hint,
                    MinkowskiDiff::ShapeData data[2]) {
+  
+  std::cout << "getSupportTpl_dir: \n" << dir << "\n";
+  std::cout << "getSupportTpl_oR1: \n" << oR1 << "\n";
+  std::cout << "getSupportTpl_ot1: \n" << ot1 << "\n";
   getShapeSupport(s0, dir, support0, hint[0], &(data[0]));
   if (TransformIsIdentity)
     getShapeSupport(s1, -dir, support1, hint[1], &(data[1]));
@@ -1079,6 +1087,9 @@ bool GJK::projectTriangleOrigin(const Simplex& current, Simplex& next) {
               C = current.vertex[c]->w;
 
   const Vec3f AB = B - A, AC = C - A, ABC = AB.cross(AC);
+  std::cout << "A: \n" << A << "\n";
+  std::cout << "B: \n" << B << "\n";
+  std::cout << "C: \n" << C << "\n";
 
   FCL_REAL edgeAC2o = ABC.cross(AC).dot(-A);
   if (edgeAC2o >= 0) {
@@ -1121,6 +1132,12 @@ bool GJK::projectTetrahedraOrigin(const Simplex& current, Simplex& next) {
   const Vec3f& B(current.vertex[b]->w);
   const Vec3f& C(current.vertex[c]->w);
   const Vec3f& D(current.vertex[d]->w);
+
+  std::cout << "A: \n" << A << "\n";
+  std::cout << "B: \n" << B << "\n";
+  std::cout << "C: \n" << C << "\n";
+  std::cout << "D: \n" << D << "\n";
+
   const FCL_REAL aa = A.squaredNorm();
   const FCL_REAL da = D.dot(A);
   const FCL_REAL db = D.dot(B);
@@ -1156,85 +1173,118 @@ bool GJK::projectTetrahedraOrigin(const Simplex& current, Simplex& next) {
   return true;
 
   if (ba_aa <= 0) {                // if AB.AO >= 0 / a10
+    std::cout << "true: \n";
     if (-D.dot(a_cross_b) <= 0) {  // if ADB.AO >= 0 / a10.a3
+    std::cout << "true: \n";
       if (ba * da_ba + bd * ba_aa - bb * da_aa <=
           0) {             // if (ADB ^ AB).AO >= 0 / a10.a3.a9
+          std::cout << "true: \n";
         if (da_aa <= 0) {  // if AD.AO >= 0 / a10.a3.a9.a12
+        std::cout << "true: \n";
           assert(da * da_ba + dd * ba_aa - db * da_aa <=
                  dummy_precision);  // (ADB ^ AD).AO >= 0 / a10.a3.a9.a12.a8
           if (ba * ba_ca + bb * ca_aa - bc * ba_aa <=
               0) {  // if (ABC ^ AB).AO >= 0 / a10.a3.a9.a12.a8.a4
+              std::cout << "true: \n";
             // Region ABC
+            std::cout << "ABC: \n";
             originToTriangle(current, a, b, c, (B - A).cross(C - A),
                              -C.dot(a_cross_b), next, ray);
             free_v[nfree++] = current.vertex[d];
           } else {  // not (ABC ^ AB).AO >= 0 / a10.a3.a9.a12.a8.!a4
+          std::cout << "false: \n";
             // Region AB
+            std::cout << "AB: \n";
             originToSegment(current, a, b, A, B, B - A, -ba_aa, next, ray);
             free_v[nfree++] = current.vertex[c];
             free_v[nfree++] = current.vertex[d];
           }       // end of (ABC ^ AB).AO >= 0
         } else {  // not AD.AO >= 0 / a10.a3.a9.!a12
+        std::cout << "false: \n";
           if (ba * ba_ca + bb * ca_aa - bc * ba_aa <=
               0) {  // if (ABC ^ AB).AO >= 0 / a10.a3.a9.!a12.a4
+              std::cout << "true: \n";
             if (ca * ba_ca + cb * ca_aa - cc * ba_aa <=
                 0) {  // if (ABC ^ AC).AO >= 0 / a10.a3.a9.!a12.a4.a5
+                std::cout << "true: \n";
               if (ca * ca_da + cc * da_aa - cd * ca_aa <=
                   0) {  // if (ACD ^ AC).AO >= 0 / a10.a3.a9.!a12.a4.a5.a6
+                  std::cout << "true: \n";
                 // Region ACD
+                std::cout << "ACD: \n";
                 originToTriangle(current, a, c, d, (C - A).cross(D - A),
                                  -D.dot(a_cross_c), next, ray);
                 free_v[nfree++] = current.vertex[b];
               } else {  // not (ACD ^ AC).AO >= 0 / a10.a3.a9.!a12.a4.a5.!a6
+               std::cout << "false: \n";
                 // Region AC
+                std::cout << "AC: \n";
                 originToSegment(current, a, c, A, C, C - A, -ca_aa, next, ray);
                 free_v[nfree++] = current.vertex[b];
                 free_v[nfree++] = current.vertex[d];
               }       // end of (ACD ^ AC).AO >= 0
             } else {  // not (ABC ^ AC).AO >= 0 / a10.a3.a9.!a12.a4.!a5
+             std::cout << "false: \n";
               // Region ABC
+              std::cout << "ABC: \n";
               originToTriangle(current, a, b, c, (B - A).cross(C - A),
                                -C.dot(a_cross_b), next, ray);
               free_v[nfree++] = current.vertex[d];
             }       // end of (ABC ^ AC).AO >= 0
           } else {  // not (ABC ^ AB).AO >= 0 / a10.a3.a9.!a12.!a4
+           std::cout << "false: \n";
             // Region AB
+            std::cout << "AB: \n";
             originToSegment(current, a, b, A, B, B - A, -ba_aa, next, ray);
             free_v[nfree++] = current.vertex[c];
             free_v[nfree++] = current.vertex[d];
           }     // end of (ABC ^ AB).AO >= 0
         }       // end of AD.AO >= 0
       } else {  // not (ADB ^ AB).AO >= 0 / a10.a3.!a9
+      std::cout << "false: \n";
         if (da * da_ba + dd * ba_aa - db * da_aa <=
             0) {  // if (ADB ^ AD).AO >= 0 / a10.a3.!a9.a8
+             std::cout << "true: \n";
           // Region ADB
+          std::cout << "ADB: \n";
           originToTriangle(current, a, d, b, (D - A).cross(B - A),
                            D.dot(a_cross_b), next, ray);
           free_v[nfree++] = current.vertex[c];
         } else {  // not (ADB ^ AD).AO >= 0 / a10.a3.!a9.!a8
+         std::cout << "false: \n";
           if (ca * ca_da + cc * da_aa - cd * ca_aa <=
               0) {  // if (ACD ^ AC).AO >= 0 / a10.a3.!a9.!a8.a6
+              std::cout << "true: \n";
             if (da * ca_da + dc * da_aa - dd * ca_aa <=
                 0) {  // if (ACD ^ AD).AO >= 0 / a10.a3.!a9.!a8.a6.a7
+                std::cout << "true: \n";
               // Region AD
+              std::cout << "AD: \n";
               originToSegment(current, a, d, A, D, D - A, -da_aa, next, ray);
               free_v[nfree++] = current.vertex[b];
               free_v[nfree++] = current.vertex[c];
             } else {  // not (ACD ^ AD).AO >= 0 / a10.a3.!a9.!a8.a6.!a7
+            std::cout << "false: \n";
               // Region ACD
+              std::cout << "ACD: \n";
               originToTriangle(current, a, c, d, (C - A).cross(D - A),
                                -D.dot(a_cross_c), next, ray);
               free_v[nfree++] = current.vertex[b];
             }       // end of (ACD ^ AD).AO >= 0
           } else {  // not (ACD ^ AC).AO >= 0 / a10.a3.!a9.!a8.!a6
+          std::cout << "false: \n";
             if (da * ca_da + dc * da_aa - dd * ca_aa <=
                 0) {  // if (ACD ^ AD).AO >= 0 / a10.a3.!a9.!a8.!a6.a7
+                std::cout << "true: \n";
               // Region AD
+              std::cout << "AD: \n";
               originToSegment(current, a, d, A, D, D - A, -da_aa, next, ray);
               free_v[nfree++] = current.vertex[b];
               free_v[nfree++] = current.vertex[c];
             } else {  // not (ACD ^ AD).AO >= 0 / a10.a3.!a9.!a8.!a6.!a7
+            std::cout << "false: \n";
               // Region AC
+              std::cout << "AC: \n";
               originToSegment(current, a, c, A, C, C - A, -ca_aa, next, ray);
               free_v[nfree++] = current.vertex[b];
               free_v[nfree++] = current.vertex[d];
@@ -1243,146 +1293,207 @@ bool GJK::projectTetrahedraOrigin(const Simplex& current, Simplex& next) {
         }                           // end of (ADB ^ AD).AO >= 0
       }                             // end of (ADB ^ AB).AO >= 0
     } else {                        // not ADB.AO >= 0 / a10.!a3
+    std::cout << "false: \n";
       if (C.dot(a_cross_b) <= 0) {  // if ABC.AO >= 0 / a10.!a3.a1
+      std::cout << "true: \n";
+
+        std::cout << "ba: \n" << ba << "\n";
+        std::cout << "ba_ca: \n" << ba_ca << "\n";
+        std::cout << "bb: \n" << bb << "\n";
+        std::cout << "ca_aa: \n" << ca_aa << "\n";
+        std::cout << "bc: \n" << bc << "\n";
+        std::cout << "ba_aa: \n" << ba_aa << "\n";
         if (ba * ba_ca + bb * ca_aa - bc * ba_aa <=
             0) {  // if (ABC ^ AB).AO >= 0 / a10.!a3.a1.a4
+            std::cout << "true: \n";
           if (ca * ba_ca + cb * ca_aa - cc * ba_aa <=
               0) {  // if (ABC ^ AC).AO >= 0 / a10.!a3.a1.a4.a5
+              std::cout << "true: \n";
             if (ca * ca_da + cc * da_aa - cd * ca_aa <=
                 0) {  // if (ACD ^ AC).AO >= 0 / a10.!a3.a1.a4.a5.a6
+                std::cout << "true: \n";
               // Region ACD
+              std::cout << "ACD: \n";
               originToTriangle(current, a, c, d, (C - A).cross(D - A),
                                -D.dot(a_cross_c), next, ray);
               free_v[nfree++] = current.vertex[b];
             } else {  // not (ACD ^ AC).AO >= 0 / a10.!a3.a1.a4.a5.!a6
+            std::cout << "false: \n";
               // Region AC
+              std::cout << "AC: \n";
               originToSegment(current, a, c, A, C, C - A, -ca_aa, next, ray);
               free_v[nfree++] = current.vertex[b];
               free_v[nfree++] = current.vertex[d];
             }       // end of (ACD ^ AC).AO >= 0
           } else {  // not (ABC ^ AC).AO >= 0 / a10.!a3.a1.a4.!a5
+          std::cout << "false: \n";
             // Region ABC
+            std::cout << "ABC: \n";
             originToTriangle(current, a, b, c, (B - A).cross(C - A),
                              -C.dot(a_cross_b), next, ray);
             free_v[nfree++] = current.vertex[d];
           }       // end of (ABC ^ AC).AO >= 0
         } else {  // not (ABC ^ AB).AO >= 0 / a10.!a3.a1.!a4
+        std::cout << "false: \n";
           // Region AB
+          std::cout << "AB: \n";
           originToSegment(current, a, b, A, B, B - A, -ba_aa, next, ray);
           free_v[nfree++] = current.vertex[c];
           free_v[nfree++] = current.vertex[d];
         }                             // end of (ABC ^ AB).AO >= 0
       } else {                        // not ABC.AO >= 0 / a10.!a3.!a1
+      std::cout << "false: \n";
         if (D.dot(a_cross_c) <= 0) {  // if ACD.AO >= 0 / a10.!a3.!a1.a2
+        std::cout << "true: \n";
           if (ca * ca_da + cc * da_aa - cd * ca_aa <=
               0) {  // if (ACD ^ AC).AO >= 0 / a10.!a3.!a1.a2.a6
+              std::cout << "true: \n";
             if (da * ca_da + dc * da_aa - dd * ca_aa <=
                 0) {  // if (ACD ^ AD).AO >= 0 / a10.!a3.!a1.a2.a6.a7
+                std::cout << "true: \n";
               // Region AD
+              std::cout << "AD: \n";
               originToSegment(current, a, d, A, D, D - A, -da_aa, next, ray);
               free_v[nfree++] = current.vertex[b];
               free_v[nfree++] = current.vertex[c];
             } else {  // not (ACD ^ AD).AO >= 0 / a10.!a3.!a1.a2.a6.!a7
+            std::cout << "false: \n";
               // Region ACD
+              std::cout << "ACD: \n";
               originToTriangle(current, a, c, d, (C - A).cross(D - A),
                                -D.dot(a_cross_c), next, ray);
               free_v[nfree++] = current.vertex[b];
             }                  // end of (ACD ^ AD).AO >= 0
           } else {             // not (ACD ^ AC).AO >= 0 / a10.!a3.!a1.a2.!a6
+          std::cout << "false: \n";
             if (ca_aa <= 0) {  // if AC.AO >= 0 / a10.!a3.!a1.a2.!a6.a11
+            std::cout << "true: \n";
               // Region AC
+              std::cout << "AC: \n";
               originToSegment(current, a, c, A, C, C - A, -ca_aa, next, ray);
               free_v[nfree++] = current.vertex[b];
               free_v[nfree++] = current.vertex[d];
             } else {  // not AC.AO >= 0 / a10.!a3.!a1.a2.!a6.!a11
+            std::cout << "false: \n";
               // Region AD
+              std::cout << "AD: \n";
               originToSegment(current, a, d, A, D, D - A, -da_aa, next, ray);
               free_v[nfree++] = current.vertex[b];
               free_v[nfree++] = current.vertex[c];
             }     // end of AC.AO >= 0
           }       // end of (ACD ^ AC).AO >= 0
         } else {  // not ACD.AO >= 0 / a10.!a3.!a1.!a2
+        std::cout << "false: \n";
           // Region Inside
+          std::cout << "Inside: \n";
           REGION_INSIDE()
         }                           // end of ACD.AO >= 0
       }                             // end of ABC.AO >= 0
     }                               // end of ADB.AO >= 0
   } else {                          // not AB.AO >= 0 / !a10
+  std::cout << "false: \n";
     if (ca_aa <= 0) {               // if AC.AO >= 0 / !a10.a11
+    std::cout << "true: \n";
       if (D.dot(a_cross_c) <= 0) {  // if ACD.AO >= 0 / !a10.a11.a2
+      std::cout << "true: \n";
         if (da_aa <= 0) {           // if AD.AO >= 0 / !a10.a11.a2.a12
+        std::cout << "true: \n";
           if (ca * ca_da + cc * da_aa - cd * ca_aa <=
               0) {  // if (ACD ^ AC).AO >= 0 / !a10.a11.a2.a12.a6
+              std::cout << "true: \n";
             if (da * ca_da + dc * da_aa - dd * ca_aa <=
                 0) {  // if (ACD ^ AD).AO >= 0 / !a10.a11.a2.a12.a6.a7
+                std::cout << "true: \n";
               if (da * da_ba + dd * ba_aa - db * da_aa <=
                   0) {  // if (ADB ^ AD).AO >= 0 / !a10.a11.a2.a12.a6.a7.a8
+                  std::cout << "true: \n";
                 // Region ADB
+                std::cout << "ADB: \n";
                 originToTriangle(current, a, d, b, (D - A).cross(B - A),
                                  D.dot(a_cross_b), next, ray);
                 free_v[nfree++] = current.vertex[c];
               } else {  // not (ADB ^ AD).AO >= 0 / !a10.a11.a2.a12.a6.a7.!a8
+               std::cout << "false: \n";
                 // Region AD
+                std::cout << "AD: \n";
                 originToSegment(current, a, d, A, D, D - A, -da_aa, next, ray);
                 free_v[nfree++] = current.vertex[b];
                 free_v[nfree++] = current.vertex[c];
               }       // end of (ADB ^ AD).AO >= 0
             } else {  // not (ACD ^ AD).AO >= 0 / !a10.a11.a2.a12.a6.!a7
+             std::cout << "false: \n";
               // Region ACD
+              std::cout << "ACD: \n";
               originToTriangle(current, a, c, d, (C - A).cross(D - A),
                                -D.dot(a_cross_c), next, ray);
               free_v[nfree++] = current.vertex[b];
             }       // end of (ACD ^ AD).AO >= 0
           } else {  // not (ACD ^ AC).AO >= 0 / !a10.a11.a2.a12.!a6
+           std::cout << "false: \n";
             assert(!(da * ca_da + dc * da_aa - dd * ca_aa <=
                      dummy_precision));  // Not (ACD ^ AD).AO >= 0 /
                                          // !a10.a11.a2.a12.!a6.!a7
             if (ca * ba_ca + cb * ca_aa - cc * ba_aa <=
                 0) {  // if (ABC ^ AC).AO >= 0 / !a10.a11.a2.a12.!a6.!a7.a5
+                 std::cout << "true: \n";
               // Region AC
+              std::cout << "AC: \n";
               originToSegment(current, a, c, A, C, C - A, -ca_aa, next, ray);
               free_v[nfree++] = current.vertex[b];
               free_v[nfree++] = current.vertex[d];
             } else {  // not (ABC ^ AC).AO >= 0 / !a10.a11.a2.a12.!a6.!a7.!a5
+            std::cout << "false: \n";
               // Region ABC
+              std::cout << "ABC: \n";
               originToTriangle(current, a, b, c, (B - A).cross(C - A),
                                -C.dot(a_cross_b), next, ray);
               free_v[nfree++] = current.vertex[d];
             }     // end of (ABC ^ AC).AO >= 0
           }       // end of (ACD ^ AC).AO >= 0
         } else {  // not AD.AO >= 0 / !a10.a11.a2.!a12
+        std::cout << "false: \n";
           if (ca * ba_ca + cb * ca_aa - cc * ba_aa <=
               0) {  // if (ABC ^ AC).AO >= 0 / !a10.a11.a2.!a12.a5
+              std::cout << "true: \n";
             if (ca * ca_da + cc * da_aa - cd * ca_aa <=
                 0) {  // if (ACD ^ AC).AO >= 0 / !a10.a11.a2.!a12.a5.a6
+                std::cout << "true: \n";
               assert(!(da * ca_da + dc * da_aa - dd * ca_aa <=
                        -dummy_precision));  // Not (ACD ^ AD).AO >= 0 /
                                             // !a10.a11.a2.!a12.a5.a6.!a7
               // Region ACD
+              std::cout << "ACD: \n";
               originToTriangle(current, a, c, d, (C - A).cross(D - A),
                                -D.dot(a_cross_c), next, ray);
               free_v[nfree++] = current.vertex[b];
             } else {  // not (ACD ^ AC).AO >= 0 / !a10.a11.a2.!a12.a5.!a6
+            std::cout << "false: \n";
               // Region AC
+              std::cout << "AC: \n";
               originToSegment(current, a, c, A, C, C - A, -ca_aa, next, ray);
               free_v[nfree++] = current.vertex[b];
               free_v[nfree++] = current.vertex[d];
             }       // end of (ACD ^ AC).AO >= 0
           } else {  // not (ABC ^ AC).AO >= 0 / !a10.a11.a2.!a12.!a5
+          std::cout << "false: \n";
             if (C.dot(a_cross_b) <=
                 0) {  // if ABC.AO >= 0 / !a10.a11.a2.!a12.!a5.a1
+                std::cout << "true: \n";
               assert(ba * ba_ca + bb * ca_aa - bc * ba_aa <=
                      dummy_precision);  // (ABC ^ AB).AO >= 0 /
                                         // !a10.a11.a2.!a12.!a5.a1.a4
               // Region ABC
+              std::cout << "ABC: \n";
               originToTriangle(current, a, b, c, (B - A).cross(C - A),
                                -C.dot(a_cross_b), next, ray);
               free_v[nfree++] = current.vertex[d];
             } else {  // not ABC.AO >= 0 / !a10.a11.a2.!a12.!a5.!a1
+            std::cout << "false: \n";
               assert(!(da * ca_da + dc * da_aa - dd * ca_aa <=
                        -dummy_precision));  // Not (ACD ^ AD).AO >= 0 /
                                             // !a10.a11.a2.!a12.!a5.!a1.!a7
               // Region ACD
+              std::cout << "ACD: \n";
               originToTriangle(current, a, c, d, (C - A).cross(D - A),
                                -D.dot(a_cross_c), next, ray);
               free_v[nfree++] = current.vertex[b];
@@ -1390,84 +1501,115 @@ bool GJK::projectTetrahedraOrigin(const Simplex& current, Simplex& next) {
           }                           // end of (ABC ^ AC).AO >= 0
         }                             // end of AD.AO >= 0
       } else {                        // not ACD.AO >= 0 / !a10.a11.!a2
+      std::cout << "false: \n";
         if (C.dot(a_cross_b) <= 0) {  // if ABC.AO >= 0 / !a10.a11.!a2.a1
+        std::cout << "true: \n";
           if (ca * ba_ca + cb * ca_aa - cc * ba_aa <=
               0) {  // if (ABC ^ AC).AO >= 0 / !a10.a11.!a2.a1.a5
+              std::cout << "true: \n";
             // Region AC
+            std::cout << "AC: \n";
             originToSegment(current, a, c, A, C, C - A, -ca_aa, next, ray);
             free_v[nfree++] = current.vertex[b];
             free_v[nfree++] = current.vertex[d];
           } else {  // not (ABC ^ AC).AO >= 0 / !a10.a11.!a2.a1.!a5
+          std::cout << "false: \n";
             assert(ba * ba_ca + bb * ca_aa - bc * ba_aa <=
                    dummy_precision);  // (ABC ^ AB).AO >= 0 /
                                       // !a10.a11.!a2.a1.!a5.a4
             // Region ABC
+            std::cout << "ABC: \n";
             originToTriangle(current, a, b, c, (B - A).cross(C - A),
                              -C.dot(a_cross_b), next, ray);
             free_v[nfree++] = current.vertex[d];
           }                              // end of (ABC ^ AC).AO >= 0
+          
         } else {                         // not ABC.AO >= 0 / !a10.a11.!a2.!a1
+        std::cout << "false: \n";
           if (-D.dot(a_cross_b) <= 0) {  // if ADB.AO >= 0 / !a10.a11.!a2.!a1.a3
+          std::cout << "true: \n";
             if (da * da_ba + dd * ba_aa - db * da_aa <=
                 0) {  // if (ADB ^ AD).AO >= 0 / !a10.a11.!a2.!a1.a3.a8
+                std::cout << "true: \n";
               // Region ADB
+              std::cout << "ADB: \n";
               originToTriangle(current, a, d, b, (D - A).cross(B - A),
                                D.dot(a_cross_b), next, ray);
               free_v[nfree++] = current.vertex[c];
             } else {  // not (ADB ^ AD).AO >= 0 / !a10.a11.!a2.!a1.a3.!a8
+            std::cout << "false: \n";
               // Region AD
+              std::cout << "AD: \n";
               originToSegment(current, a, d, A, D, D - A, -da_aa, next, ray);
               free_v[nfree++] = current.vertex[b];
               free_v[nfree++] = current.vertex[c];
             }       // end of (ADB ^ AD).AO >= 0
           } else {  // not ADB.AO >= 0 / !a10.a11.!a2.!a1.!a3
+          std::cout << "false: \n";
             // Region Inside
+            std::cout << "Inside: \n";
             REGION_INSIDE()
           }                            // end of ADB.AO >= 0
         }                              // end of ABC.AO >= 0
       }                                // end of ACD.AO >= 0
     } else {                           // not AC.AO >= 0 / !a10.!a11
+    std::cout << "false: \n";
       if (da_aa <= 0) {                // if AD.AO >= 0 / !a10.!a11.a12
+      std::cout << "true: \n";
         if (-D.dot(a_cross_b) <= 0) {  // if ADB.AO >= 0 / !a10.!a11.a12.a3
+        std::cout << "true: \n";
           if (da * ca_da + dc * da_aa - dd * ca_aa <=
               0) {  // if (ACD ^ AD).AO >= 0 / !a10.!a11.a12.a3.a7
+              std::cout << "true: \n";
             if (da * da_ba + dd * ba_aa - db * da_aa <=
                 0) {  // if (ADB ^ AD).AO >= 0 / !a10.!a11.a12.a3.a7.a8
+                std::cout << "true: \n";
               assert(!(ba * da_ba + bd * ba_aa - bb * da_aa <=
                        -dummy_precision));  // Not (ADB ^ AB).AO >= 0 /
                                             // !a10.!a11.a12.a3.a7.a8.!a9
               // Region ADB
+              std::cout << "ADB: \n";
               originToTriangle(current, a, d, b, (D - A).cross(B - A),
                                D.dot(a_cross_b), next, ray);
               free_v[nfree++] = current.vertex[c];
             } else {  // not (ADB ^ AD).AO >= 0 / !a10.!a11.a12.a3.a7.!a8
+            std::cout << "false: \n";
               // Region AD
+              std::cout << "AD: \n";
               originToSegment(current, a, d, A, D, D - A, -da_aa, next, ray);
               free_v[nfree++] = current.vertex[b];
               free_v[nfree++] = current.vertex[c];
             }       // end of (ADB ^ AD).AO >= 0
           } else {  // not (ACD ^ AD).AO >= 0 / !a10.!a11.a12.a3.!a7
+          std::cout << "false: \n";
             if (D.dot(a_cross_c) <=
-                0) {  // if ACD.AO >= 0 / !a10.!a11.a12.a3.!a7.a2
+                0) {  // if ACD.AO >= 0 / !a10.!a11.a12.a3.!a7.
+                std::cout << "true: \n";
               assert(ca * ca_da + cc * da_aa - cd * ca_aa <=
                      dummy_precision);  // (ACD ^ AC).AO >= 0 /
                                         // !a10.!a11.a12.a3.!a7.a2.a6
               // Region ACD
+              std::cout << "ACD: \n";
               originToTriangle(current, a, c, d, (C - A).cross(D - A),
                                -D.dot(a_cross_c), next, ray);
               free_v[nfree++] = current.vertex[b];
             } else {  // not ACD.AO >= 0 / !a10.!a11.a12.a3.!a7.!a2
+             std::cout << "false: \n";
               if (C.dot(a_cross_b) <=
                   0) {  // if ABC.AO >= 0 / !a10.!a11.a12.a3.!a7.!a2.a1
+                  std::cout << "true: \n";
                 assert(!(ba * ba_ca + bb * ca_aa - bc * ba_aa <=
                          -dummy_precision));  // Not (ABC ^ AB).AO >= 0 /
                                               // !a10.!a11.a12.a3.!a7.!a2.a1.!a4
                 // Region ADB
+                std::cout << "ADB: \n";
                 originToTriangle(current, a, d, b, (D - A).cross(B - A),
                                  D.dot(a_cross_b), next, ray);
                 free_v[nfree++] = current.vertex[c];
               } else {  // not ABC.AO >= 0 / !a10.!a11.a12.a3.!a7.!a2.!a1
+              std::cout << "false: \n";
                 // Region ADB
+                std::cout << "ADB: \n";
                 originToTriangle(current, a, d, b, (D - A).cross(B - A),
                                  D.dot(a_cross_b), next, ray);
                 free_v[nfree++] = current.vertex[c];
@@ -1475,29 +1617,39 @@ bool GJK::projectTetrahedraOrigin(const Simplex& current, Simplex& next) {
             }                           // end of ACD.AO >= 0
           }                             // end of (ACD ^ AD).AO >= 0
         } else {                        // not ADB.AO >= 0 / !a10.!a11.a12.!a3
+        std::cout << "false: \n";
           if (D.dot(a_cross_c) <= 0) {  // if ACD.AO >= 0 / !a10.!a11.a12.!a3.a2
+           std::cout << "true: \n";
             if (da * ca_da + dc * da_aa - dd * ca_aa <=
                 0) {  // if (ACD ^ AD).AO >= 0 / !a10.!a11.a12.!a3.a2.a7
+                 std::cout << "true: \n";
               // Region AD
+              std::cout << "AD: \n";
               originToSegment(current, a, d, A, D, D - A, -da_aa, next, ray);
               free_v[nfree++] = current.vertex[b];
               free_v[nfree++] = current.vertex[c];
             } else {  // not (ACD ^ AD).AO >= 0 / !a10.!a11.a12.!a3.a2.!a7
+            std::cout << "false: \n";
               assert(ca * ca_da + cc * da_aa - cd * ca_aa <=
                      dummy_precision);  // (ACD ^ AC).AO >= 0 /
                                         // !a10.!a11.a12.!a3.a2.!a7.a6
               // Region ACD
+              std::cout << "ACD: \n";
               originToTriangle(current, a, c, d, (C - A).cross(D - A),
                                -D.dot(a_cross_c), next, ray);
               free_v[nfree++] = current.vertex[b];
             }       // end of (ACD ^ AD).AO >= 0
           } else {  // not ACD.AO >= 0 / !a10.!a11.a12.!a3.!a2
+          std::cout << "false: \n";
             // Region Inside
+            std::cout << "Inside: \n";
             REGION_INSIDE()
           }     // end of ACD.AO >= 0
         }       // end of ADB.AO >= 0
       } else {  // not AD.AO >= 0 / !a10.!a11.!a12
+      std::cout << "false: \n";
         // Region A
+        std::cout << "A: \n";
         originToPoint(current, a, A, next, ray);
         free_v[nfree++] = current.vertex[b];
         free_v[nfree++] = current.vertex[c];
@@ -1507,6 +1659,8 @@ bool GJK::projectTetrahedraOrigin(const Simplex& current, Simplex& next) {
   }      // end of AB.AO >= 0
 
 #undef REGION_INSIDE
+
+  std::cout << "\n";
   return false;
 }
 
