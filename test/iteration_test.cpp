@@ -69,8 +69,7 @@ void test_nesterov_gjk(const ShapeBase& shape0, const ShapeBase& shape1, Transfo
   unsigned int max_iterations = 128;
   FCL_REAL tolerance = 1e-6;
   GJK gjk(max_iterations, tolerance);
-  GJK gjk_nesterov(max_iterations, tolerance);
-  gjk_nesterov.gjk_variant = GJKVariant::NesterovAcceleration;
+  gjk.gjk_variant = GJKVariant::NesterovAcceleration;
 
   // Minkowski difference
   MinkowskiDiff mink_diff;
@@ -87,11 +86,6 @@ void test_nesterov_gjk(const ShapeBase& shape0, const ShapeBase& shape1, Transfo
       gjk.evaluate(mink_diff, init_guess, init_support_guess);
   Vec3f ray_gjk = gjk.ray;
   
-  /*
-  GJK::Status res_nesterov_gjk_1 =
-      gjk_nesterov.evaluate(mink_diff, init_guess, init_support_guess);
-  Vec3f ray_nesterov = gjk_nesterov.ray;
-  */
   
   // Make sure GJK and Nesterov accelerated GJK find the same distance between
   // the shapes
@@ -101,11 +95,9 @@ void test_nesterov_gjk(const ShapeBase& shape0, const ShapeBase& shape1, Transfo
   // Make sure GJK and Nesterov accelerated GJK converges in a reasonable
   // amount of iterations
   BOOST_CHECK(gjk.getIterations() < max_iterations);
-  // BOOST_CHECK(gjk_nesterov.getIterations() < max_iterations);
   std::cout << "gjk iterations:\n" << gjk.getIterations() << "\n";
-  // std::cout << "gjk nesterov iterations:\n" << gjk_nesterov.getIterations() << "\n";
 
-  std::cout << "gjk dist:\n" << gjk_nesterov.distance << "\n";
+  std::cout << "gjk dist:\n" << gjk.distance << "\n";
 }
 
 BOOST_AUTO_TEST_CASE(case_3) {
@@ -225,3 +217,51 @@ BOOST_AUTO_TEST_CASE(cylinder_capsule) {
   test_nesterov_gjk(cylinder, capsule, transform0, transform1);
 }
 
+
+BOOST_AUTO_TEST_CASE(capluse_sphere) {
+  std::cout << "capluse vs sphere\n";
+
+  Capsule capsule = Capsule(0.9218123729576948, 0.16552090305800327);
+  Sphere sphere = Sphere(0.34425784144283245);
+
+  Transform3f transform0; 
+  Eigen::Matrix3d m0;
+  m0 << 0.27841557, -0.58984435, -0.75800291, 
+        0.91747359, -0.07013484,  0.39156521, 
+       -0.28412494, -0.8044655,   0.52163998;
+  transform0.setTransform(m0, Vec3f(0.48459252, -1.33979643, 1.01785838));
+
+  Transform3f transform1; 
+  Eigen::Matrix3d m1;
+  m1 << 1.0, 0.0, 0.0,
+        0.0, 1.0, 0.0,
+        0.0, 0.0, 1.0;
+  transform1.setTransform(m1, Vec3f(-1.66774998, -2.96656368, -0.05856713));
+
+  test_nesterov_gjk(capsule, sphere, transform0, transform1);
+}
+
+
+BOOST_AUTO_TEST_CASE(cylinder_cylinder) {
+  std::cout << "cylinder vs cylinder\n";
+
+  Cylinder cylinder0 = Cylinder(0.510938, 0.127116);
+  Cylinder cylinder1 = Cylinder(0.903175, 0.456057);
+  
+
+  Transform3f transform0; 
+  Eigen::Matrix3d m0;
+  m0 << 0.365685,  0.898448, -0.243034,
+        -0.739601,  0.439027,  0.510143,
+        0.565035, -0.006803,  0.825039;
+  transform0.setTransform(m0, Vec3f(-1.556104, 0.765753, -0.834356));
+
+  Transform3f transform1; 
+  Eigen::Matrix3d m1;
+  m1 << 0.946613,  0.007576,  0.322282,
+        0.285324,  0.44562,  -0.848536,
+       -0.150044,  0.89519,   0.419668;
+  transform1.setTransform(m1, Vec3f(0.394209, 0.433601, 0.332314));
+
+  test_nesterov_gjk(cylinder0, cylinder1, transform0, transform1);
+}
