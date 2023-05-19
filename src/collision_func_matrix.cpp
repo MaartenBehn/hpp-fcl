@@ -160,7 +160,7 @@ struct HPP_FCL_LOCAL BVHShapeCollider {
   }
 };
 
-/// @brief Collider functor for HeightField data structure
+/// @brief Geo functor for HeightField data structure
 /// \tparam _Options takes two values.
 ///         - RelativeTransformationIsIdentity if object 1 should be moved
 ///           into the frame of object 2 before computing collisions.
