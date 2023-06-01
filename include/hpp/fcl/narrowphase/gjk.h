@@ -213,8 +213,8 @@ struct HPP_FCL_DLLAPI GJK {
     shape->support(d, dIsNormalized, sv.w0, sv.w1, hint);
     sv.w = sv.w0 - sv.w1;
 
-    std::cout << "s0: \n" << sv.w0 << "\n";
-    std::cout << "s1: \n" << sv.w1 << "\n";
+    // std::cout << "s0: \n" << sv.w0 << "\n";
+    // std::cout << "s1: \n" << sv.w1 << "\n";
   }
 
   /// @brief whether the simplex enclose the origin
